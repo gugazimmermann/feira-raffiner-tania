@@ -1,0 +1,21 @@
+export function LogoPair() {
+  return (
+    <div className="logo-pair" aria-label="Raffiner e Tânia Veiga">
+      <div className="logo-pair__slot">
+        <img
+          className="logo-pair__logo logo-pair__logo--raffiner"
+          src="/raffiner.webp"
+          alt="Raffiner"
+        />
+      </div>
+      <span className="logo-pair__divider" aria-hidden="true" />
+      <div className="logo-pair__slot">
+        <img
+          className="logo-pair__logo logo-pair__logo--tania"
+          src="/tania_veiga.png"
+          alt="Tânia Veiga Doces e Salgados"
+        />
+      </div>
+    </div>
+  )
+}
