@@ -48,6 +48,10 @@ function App() {
                   <span>WhatsApp</span>
                   <strong>{submitted.whatsapp}</strong>
                 </li>
+                <li>
+                  <span>Instagram</span>
+                  <strong>@{submitted.instagram}</strong>
+                </li>
               </ul>
               <button
                 className="reset-btn"

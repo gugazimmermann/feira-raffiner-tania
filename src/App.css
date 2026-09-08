@@ -156,6 +156,54 @@
   border-color: var(--error);
 }
 
+.field__control {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: clamp(64px, 9vh, 76px);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field__control--prefix {
+  padding-left: 1.25rem;
+  gap: 0.15rem;
+}
+
+.field__prefix {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+  font-size: clamp(1.2rem, 1.6vw, 1.35rem);
+  font-weight: 600;
+  user-select: none;
+}
+
+.field__control input {
+  min-height: unset;
+  padding: 1rem 1.25rem 1rem 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.field__control input:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.field__control:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.field__control--invalid,
+.field__control:has(input[aria-invalid='true']) {
+  border-color: var(--error);
+}
+
 .field__error {
   margin: 0;
   font-size: 1rem;

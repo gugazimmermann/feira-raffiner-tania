@@ -5,6 +5,7 @@ export type LeadData = {
   nome: string
   empresa: string
   whatsapp: string
+  instagram: string
 }
 
 type FieldErrors = Partial<Record<keyof LeadData, string>>
@@ -12,6 +13,8 @@ type FieldErrors = Partial<Record<keyof LeadData, string>>
 type LeadFormProps = {
   onSuccess: (data: LeadData) => void
 }
+
+const INSTAGRAM_HANDLE = /^[a-zA-Z0-9._]{1,30}$/
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
@@ -35,6 +38,10 @@ function formatWhatsapp(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
 
+function normalizeInstagram(value: string) {
+  return value.replace(/^@+/, '').slice(0, 30)
+}
+
 function validate(data: LeadData): FieldErrors {
   const errors: FieldErrors = {}
 
@@ -42,13 +49,19 @@ function validate(data: LeadData): FieldErrors {
     errors.nome = 'Informe seu nome completo.'
   }
 
-  if (data.empresa.trim().length < 2) {
+  const empresa = data.empresa.trim()
+  if (empresa && empresa.length < 2) {
     errors.empresa = 'Informe o nome da empresa.'
   }
 
   const digits = onlyDigits(data.whatsapp)
-  if (digits.length < 10 || digits.length > 11) {
+  if (digits.length > 0 && (digits.length < 10 || digits.length > 11)) {
     errors.whatsapp = 'Informe um WhatsApp válido com DDD.'
+  }
+
+  const handle = data.instagram.trim()
+  if (handle && !INSTAGRAM_HANDLE.test(handle)) {
+    errors.instagram = 'Informe um Instagram válido.'
   }
 
   return errors
@@ -59,6 +72,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
     nome: '',
     empresa: '',
     whatsapp: '',
+    instagram: '',
   })
   const [errors, setErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -90,6 +104,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
       nome: form.nome.trim(),
       empresa: form.empresa.trim(),
       whatsapp: form.whatsapp.trim(),
+      instagram: form.instagram.trim(),
     }
 
     setSubmitting(true)
@@ -164,6 +179,41 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
         {errors.whatsapp ? (
           <p id="whatsapp-error" className="field__error" role="alert">
             {errors.whatsapp}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="instagram">Instagram</label>
+        <div
+          className={
+            errors.instagram
+              ? 'field__control field__control--prefix field__control--invalid'
+              : 'field__control field__control--prefix'
+          }
+        >
+          <span className="field__prefix" aria-hidden="true">
+            @
+          </span>
+          <input
+            id="instagram"
+            name="instagram"
+            type="text"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="seu_usuario"
+            value={form.instagram}
+            onChange={(event) =>
+              updateField('instagram', normalizeInstagram(event.target.value))
+            }
+            aria-invalid={Boolean(errors.instagram)}
+            aria-describedby={errors.instagram ? 'instagram-error' : undefined}
+          />
+        </div>
+        {errors.instagram ? (
+          <p id="instagram-error" className="field__error" role="alert">
+            {errors.instagram}
           </p>
         ) : null}
       </div>
