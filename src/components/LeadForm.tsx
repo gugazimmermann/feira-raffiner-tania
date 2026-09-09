@@ -1,5 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
+import {
+  VirtualKeyboard,
+  type VirtualKeyboardMode,
+} from './VirtualKeyboard'
 
 export type LeadData = {
   nome: string
@@ -67,6 +71,10 @@ function validate(data: LeadData): FieldErrors {
   return errors
 }
 
+function keyboardModeFor(field: keyof LeadData): VirtualKeyboardMode {
+  return field === 'whatsapp' ? 'numeric' : 'text'
+}
+
 export function LeadForm({ onSuccess }: LeadFormProps) {
   const [form, setForm] = useState<LeadData>({
     nome: '',
@@ -77,6 +85,25 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [activeField, setActiveField] = useState<keyof LeadData | null>(null)
+
+  useEffect(() => {
+    document.body.classList.toggle('keyboard-open', Boolean(activeField))
+    return () => document.body.classList.remove('keyboard-open')
+  }, [activeField])
+
+  useEffect(() => {
+    if (!activeField) return
+
+    const timer = window.setTimeout(() => {
+      document.getElementById(activeField)?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      })
+    }, 280)
+
+    return () => window.clearTimeout(timer)
+  }, [activeField])
 
   function updateField<K extends keyof LeadData>(key: K, value: string) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -89,8 +116,47 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
     })
   }
 
+  function applyKeyboardValue(field: keyof LeadData, nextRaw: string) {
+    if (field === 'whatsapp') {
+      updateField(field, formatWhatsapp(nextRaw))
+      return
+    }
+
+    if (field === 'instagram') {
+      updateField(field, normalizeInstagram(nextRaw))
+      return
+    }
+
+    updateField(field, nextRaw)
+  }
+
+  function handleKeyboardInput(char: string) {
+    if (!activeField) return
+    applyKeyboardValue(activeField, form[activeField] + char)
+  }
+
+  function handleKeyboardBackspace() {
+    if (!activeField) return
+
+    if (activeField === 'whatsapp') {
+      const digits = onlyDigits(form.whatsapp).slice(0, -1)
+      updateField('whatsapp', formatWhatsapp(digits))
+      return
+    }
+
+    applyKeyboardValue(activeField, form[activeField].slice(0, -1))
+  }
+
+  function openKeyboard(field: keyof LeadData) {
+    setActiveField(field)
+    window.requestAnimationFrame(() => {
+      document.getElementById(field)?.focus({ preventScroll: true })
+    })
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setActiveField(null)
 
     const nextErrors = validate(form)
     setErrors(nextErrors)
@@ -122,111 +188,146 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
   }
 
   return (
-    <form className="lead-form" onSubmit={handleSubmit} noValidate>
-      <div className="field">
-        <label htmlFor="nome">Nome</label>
-        <input
-          id="nome"
-          name="nome"
-          type="text"
-          placeholder="Seu nome"
-          value={form.nome}
-          onChange={(event) => updateField('nome', event.target.value)}
-          aria-invalid={Boolean(errors.nome)}
-          aria-describedby={errors.nome ? 'nome-error' : undefined}
-        />
-        {errors.nome ? (
-          <p id="nome-error" className="field__error" role="alert">
-            {errors.nome}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="field">
-        <label htmlFor="empresa">Empresa</label>
-        <input
-          id="empresa"
-          name="empresa"
-          type="text"
-          placeholder="Nome da empresa"
-          value={form.empresa}
-          onChange={(event) => updateField('empresa', event.target.value)}
-          aria-invalid={Boolean(errors.empresa)}
-          aria-describedby={errors.empresa ? 'empresa-error' : undefined}
-        />
-        {errors.empresa ? (
-          <p id="empresa-error" className="field__error" role="alert">
-            {errors.empresa}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="field">
-        <label htmlFor="whatsapp">WhatsApp</label>
-        <input
-          id="whatsapp"
-          name="whatsapp"
-          type="tel"
-          inputMode="numeric"
-          placeholder="(11) 99999-9999"
-          value={form.whatsapp}
-          onChange={(event) =>
-            updateField('whatsapp', formatWhatsapp(event.target.value))
-          }
-          aria-invalid={Boolean(errors.whatsapp)}
-          aria-describedby={errors.whatsapp ? 'whatsapp-error' : undefined}
-        />
-        {errors.whatsapp ? (
-          <p id="whatsapp-error" className="field__error" role="alert">
-            {errors.whatsapp}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="field">
-        <label htmlFor="instagram">Instagram</label>
+    <>
+      <form className="lead-form" onSubmit={handleSubmit} noValidate>
         <div
           className={
-            errors.instagram
-              ? 'field__control field__control--prefix field__control--invalid'
-              : 'field__control field__control--prefix'
+            activeField === 'nome' ? 'field field--active' : 'field'
           }
+          onPointerDown={() => openKeyboard('nome')}
         >
-          <span className="field__prefix" aria-hidden="true">
-            @
-          </span>
+          <label htmlFor="nome">Nome</label>
           <input
-            id="instagram"
-            name="instagram"
+            id="nome"
+            name="nome"
             type="text"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder="seu_usuario"
-            value={form.instagram}
-            onChange={(event) =>
-              updateField('instagram', normalizeInstagram(event.target.value))
-            }
-            aria-invalid={Boolean(errors.instagram)}
-            aria-describedby={errors.instagram ? 'instagram-error' : undefined}
+            placeholder="Seu nome"
+            value={form.nome}
+            readOnly
+            inputMode="none"
+            tabIndex={0}
+            aria-invalid={Boolean(errors.nome)}
+            aria-describedby={errors.nome ? 'nome-error' : undefined}
           />
+          {errors.nome ? (
+            <p id="nome-error" className="field__error" role="alert">
+              {errors.nome}
+            </p>
+          ) : null}
         </div>
-        {errors.instagram ? (
-          <p id="instagram-error" className="field__error" role="alert">
-            {errors.instagram}
+
+        <div
+          className={
+            activeField === 'empresa' ? 'field field--active' : 'field'
+          }
+          onPointerDown={() => openKeyboard('empresa')}
+        >
+          <label htmlFor="empresa">Empresa</label>
+          <input
+            id="empresa"
+            name="empresa"
+            type="text"
+            placeholder="Nome da empresa"
+            value={form.empresa}
+            readOnly
+            inputMode="none"
+            tabIndex={0}
+            aria-invalid={Boolean(errors.empresa)}
+            aria-describedby={errors.empresa ? 'empresa-error' : undefined}
+          />
+          {errors.empresa ? (
+            <p id="empresa-error" className="field__error" role="alert">
+              {errors.empresa}
+            </p>
+          ) : null}
+        </div>
+
+        <div
+          className={
+            activeField === 'whatsapp' ? 'field field--active' : 'field'
+          }
+          onPointerDown={() => openKeyboard('whatsapp')}
+        >
+          <label htmlFor="whatsapp">WhatsApp</label>
+          <input
+            id="whatsapp"
+            name="whatsapp"
+            type="tel"
+            inputMode="none"
+            placeholder="(11) 99999-9999"
+            value={form.whatsapp}
+            readOnly
+            tabIndex={0}
+            aria-invalid={Boolean(errors.whatsapp)}
+            aria-describedby={errors.whatsapp ? 'whatsapp-error' : undefined}
+          />
+          {errors.whatsapp ? (
+            <p id="whatsapp-error" className="field__error" role="alert">
+              {errors.whatsapp}
+            </p>
+          ) : null}
+        </div>
+
+        <div
+          className={
+            activeField === 'instagram' ? 'field field--active' : 'field'
+          }
+          onPointerDown={() => openKeyboard('instagram')}
+        >
+          <label htmlFor="instagram">Instagram</label>
+          <div
+            className={
+              errors.instagram
+                ? 'field__control field__control--prefix field__control--invalid'
+                : 'field__control field__control--prefix'
+            }
+          >
+            <span className="field__prefix" aria-hidden="true">
+              @
+            </span>
+            <input
+              id="instagram"
+              name="instagram"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="seu_usuario"
+              value={form.instagram}
+              readOnly
+              inputMode="none"
+              tabIndex={0}
+              aria-invalid={Boolean(errors.instagram)}
+              aria-describedby={
+                errors.instagram ? 'instagram-error' : undefined
+              }
+            />
+          </div>
+          {errors.instagram ? (
+            <p id="instagram-error" className="field__error" role="alert">
+              {errors.instagram}
+            </p>
+          ) : null}
+        </div>
+
+        {submitError ? (
+          <p className="field__error" role="alert">
+            {submitError}
           </p>
         ) : null}
-      </div>
 
-      {submitError ? (
-        <p className="field__error" role="alert">
-          {submitError}
-        </p>
-      ) : null}
+        <button className="submit-btn" type="submit" disabled={submitting}>
+          {submitting ? 'Enviando…' : 'Enviar'}
+        </button>
+      </form>
 
-      <button className="submit-btn" type="submit" disabled={submitting}>
-        {submitting ? 'Enviando…' : 'Enviar'}
-      </button>
-    </form>
+      <VirtualKeyboard
+        open={Boolean(activeField)}
+        mode={activeField ? keyboardModeFor(activeField) : 'text'}
+        onInput={handleKeyboardInput}
+        onBackspace={handleKeyboardBackspace}
+        onClose={() => setActiveField(null)}
+      />
+    </>
   )
 }
