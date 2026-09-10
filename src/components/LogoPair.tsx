@@ -4,7 +4,7 @@ export function LogoPair() {
       <div className="logo-pair__slot">
         <img
           className="logo-pair__logo logo-pair__logo--raffiner"
-          src="/raffiner.webp"
+          src="/raffiner2.png"
           alt="Raffiner"
         />
       </div>
