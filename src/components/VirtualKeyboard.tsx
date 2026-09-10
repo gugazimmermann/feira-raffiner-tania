@@ -77,6 +77,7 @@ function KeyButton({
   wide,
   active,
   longPressOptions,
+  holdHint,
   onPress,
   onLongPress,
 }: {
@@ -86,6 +87,7 @@ function KeyButton({
   wide?: boolean
   active?: boolean
   longPressOptions?: string[]
+  holdHint?: string
   onPress: () => void
   onLongPress?: (options: string[], rect: DOMRect) => void
 }) {
@@ -118,6 +120,8 @@ function KeyButton({
     clearTimer()
   }
 
+  const canHold = Boolean(longPressOptions?.length)
+
   return (
     <button
       ref={buttonRef}
@@ -126,12 +130,17 @@ function KeyButton({
         'vk-key',
         wide ? 'vk-key--wide' : '',
         active ? 'vk-key--active' : '',
-        longPressOptions?.length ? 'vk-key--holdable' : '',
+        canHold ? 'vk-key--holdable' : '',
         className ?? '',
       ]
         .filter(Boolean)
         .join(' ')}
-      aria-label={ariaLabel ?? label}
+      aria-label={
+        canHold
+          ? `${ariaLabel ?? label}. Segure para acentos`
+          : (ariaLabel ?? label)
+      }
+      title={canHold ? 'Segure para ver acentos' : undefined}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerEnd}
       onPointerLeave={handlePointerEnd}
@@ -145,7 +154,12 @@ function KeyButton({
         onPress()
       }}
     >
-      {label}
+      <span className="vk-key__label">{label}</span>
+      {canHold && holdHint ? (
+        <span className="vk-key__hold-hint" aria-hidden="true">
+          {holdHint}
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -279,6 +293,7 @@ export function VirtualKeyboard({
               key={char}
               label={applyCase(char)}
               longPressOptions={variants}
+              holdHint={variants ? applyCase(variants[0]) : undefined}
               onPress={() => {
                 setAccentPopup(null)
                 handleChar(char)

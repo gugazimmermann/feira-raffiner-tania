@@ -268,6 +268,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
           ) : null}
         </div>
 
+        {/* Instagram desabilitado por enquanto
         <div
           className={
             activeField === 'instagram' ? 'field field--active' : 'field'
@@ -309,6 +310,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
             </p>
           ) : null}
         </div>
+        */}
 
         {submitError ? (
           <p className="field__error" role="alert">

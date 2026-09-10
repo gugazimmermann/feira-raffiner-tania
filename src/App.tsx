@@ -23,9 +23,9 @@ function App() {
       <div className="page__inner">
         <LogoPair />
 
-        <header className="page__intro">
+        {/* <header className="page__intro">
           <p>Deixe seus dados e entraremos em contato em breve.</p>
-        </header>
+        </header> */}
 
         <section className="panel" aria-live="polite">
           {submitted ? (
@@ -48,10 +48,12 @@ function App() {
                   <span>WhatsApp</span>
                   <strong>{submitted.whatsapp}</strong>
                 </li>
+                {/* Instagram desabilitado por enquanto
                 <li>
                   <span>Instagram</span>
                   <strong>@{submitted.instagram}</strong>
                 </li>
+                */}
               </ul>
               <button
                 className="reset-btn"
