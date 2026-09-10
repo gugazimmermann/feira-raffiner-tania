@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { LeadForm, type LeadData } from './components/LeadForm'
 import { LogoPair } from './components/LogoPair'
+import { QrLinks } from './components/QrLinks'
 
 const SUCCESS_TIMEOUT_MS = 30_000
 
@@ -68,6 +69,8 @@ function App() {
           )}
         </section>
       </div>
+
+      <QrLinks />
     </main>
   )
 }
