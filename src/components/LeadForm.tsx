@@ -24,7 +24,7 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
 }
 
-function formatWhatsapp(value: string) {
+export function formatWhatsapp(value: string) {
   const digits = onlyDigits(value).slice(0, 11)
 
   if (digits.length <= 2) {
@@ -61,7 +61,7 @@ function validate(data: LeadData): FieldErrors {
   const digits = onlyDigits(data.whatsapp)
   if (digits.length === 0) {
     errors.whatsapp = 'Informe seu WhatsApp.'
-  } else if (digits.length < 10 || digits.length > 11) {
+  } else if (digits.length !== 11 || digits[2] !== '9') {
     errors.whatsapp = 'Informe um WhatsApp válido com DDD.'
   }
 
@@ -174,7 +174,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
     const payload: LeadData = {
       nome: form.nome.trim(),
       empresa: form.empresa.trim(),
-      whatsapp: form.whatsapp.trim(),
+      whatsapp: onlyDigits(form.whatsapp),
       instagram: form.instagram.trim(),
     }
 

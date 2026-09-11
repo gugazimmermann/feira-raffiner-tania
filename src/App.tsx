@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { LeadForm, type LeadData } from './components/LeadForm'
+import {
+  LeadForm,
+  formatWhatsapp,
+  type LeadData,
+} from './components/LeadForm'
 import { LogoPair } from './components/LogoPair'
 import { QrLinks } from './components/QrLinks'
 
@@ -47,7 +51,7 @@ function App() {
                 </li>
                 <li>
                   <span>WhatsApp</span>
-                  <strong>{submitted.whatsapp}</strong>
+                  <strong>{formatWhatsapp(submitted.whatsapp)}</strong>
                 </li>
                 {/* Instagram desabilitado por enquanto
                 <li>
