@@ -59,7 +59,9 @@ function validate(data: LeadData): FieldErrors {
   }
 
   const digits = onlyDigits(data.whatsapp)
-  if (digits.length > 0 && (digits.length < 10 || digits.length > 11)) {
+  if (digits.length === 0) {
+    errors.whatsapp = 'Informe seu WhatsApp.'
+  } else if (digits.length < 10 || digits.length > 11) {
     errors.whatsapp = 'Informe um WhatsApp válido com DDD.'
   }
 
@@ -105,8 +107,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
     return () => window.clearTimeout(timer)
   }, [activeField])
 
-  function updateField<K extends keyof LeadData>(key: K, value: string) {
-    setForm((current) => ({ ...current, [key]: value }))
+  function clearFieldFeedback(key: keyof LeadData) {
     setSubmitError(null)
     setErrors((current) => {
       if (!current[key]) return current
@@ -116,35 +117,39 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
     })
   }
 
-  function applyKeyboardValue(field: keyof LeadData, nextRaw: string) {
-    if (field === 'whatsapp') {
-      updateField(field, formatWhatsapp(nextRaw))
-      return
-    }
-
-    if (field === 'instagram') {
-      updateField(field, normalizeInstagram(nextRaw))
-      return
-    }
-
-    updateField(field, nextRaw)
+  function formatFieldValue(field: keyof LeadData, nextRaw: string) {
+    if (field === 'whatsapp') return formatWhatsapp(nextRaw)
+    if (field === 'instagram') return normalizeInstagram(nextRaw)
+    return nextRaw
   }
 
   function handleKeyboardInput(char: string) {
     if (!activeField) return
-    applyKeyboardValue(activeField, form[activeField] + char)
+    const field = activeField
+
+    setForm((current) => ({
+      ...current,
+      [field]: formatFieldValue(field, current[field] + char),
+    }))
+    clearFieldFeedback(field)
   }
 
   function handleKeyboardBackspace() {
     if (!activeField) return
+    const field = activeField
 
-    if (activeField === 'whatsapp') {
-      const digits = onlyDigits(form.whatsapp).slice(0, -1)
-      updateField('whatsapp', formatWhatsapp(digits))
-      return
-    }
+    setForm((current) => {
+      if (field === 'whatsapp') {
+        const digits = onlyDigits(current.whatsapp).slice(0, -1)
+        return { ...current, whatsapp: formatWhatsapp(digits) }
+      }
 
-    applyKeyboardValue(activeField, form[activeField].slice(0, -1))
+      return {
+        ...current,
+        [field]: formatFieldValue(field, current[field].slice(0, -1)),
+      }
+    })
+    clearFieldFeedback(field)
   }
 
   function openKeyboard(field: keyof LeadData) {
